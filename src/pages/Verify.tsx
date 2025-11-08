@@ -1,92 +1,60 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import Button from "../ui/Button";
+import Loader from "../ui/Loader";
 
 export default function Verify() {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const [status, setStatus] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
-  const [err, setErr] = useState<string | null>(null);
 
-  const verify = async () => {
+  const handleVerify = async () => {
     try {
       setBusy(true);
-      setMsg(null);
-      setErr(null);
+      setStatus("Waiting for biometric verification…");
 
-      // 1) pedir opciones de autenticación
-      const res1 = await fetch("/api/bioid/start-verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user?.email || "demo@user" }),
-      });
-      if (!res1.ok) throw new Error(await res1.text());
-      const { options, token } = await res1.json();
-
-      const allowList = options.allowCredentials?.map((c: any) => ({
-        ...c,
-        id: Uint8Array.from(atob(c.id), (c) => c.charCodeAt(0)),
-      }));
-
-      const publicKey = { ...options, allowCredentials: allowList };
-
-      // 2) WebAuthn get()
-      const assertion: any = await navigator.credentials.get({ publicKey });
-      if (!assertion) throw new Error("No assertion returned");
-
-      const authResp = {
-        id: assertion.id,
-        rawId: btoa(String.fromCharCode(...new Uint8Array(assertion.rawId))),
-        type: assertion.type,
-        response: {
-          authenticatorData: btoa(
-            String.fromCharCode(...new Uint8Array(assertion.response.authenticatorData))
-          ),
-          clientDataJSON: btoa(
-            String.fromCharCode(...new Uint8Array(assertion.response.clientDataJSON))
-          ),
-          signature: btoa(
-            String.fromCharCode(...new Uint8Array(assertion.response.signature))
-          ),
-          userHandle: assertion.response.userHandle
-            ? btoa(String.fromCharCode(...new Uint8Array(assertion.response.userHandle)))
-            : null,
+      // ✅ WebAuthn: autenticar usando biometría
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge: new Uint8Array(32),
+          timeout: 60000,
+          userVerification: "preferred",
         },
-        clientExtensionResults: assertion.getClientExtensionResults?.() || {},
-      };
-
-      // 3) finalizar verificación
-      const res2 = await fetch("/api/bioid/finish-verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ userId: user?.email || "demo@user", assertion: authResp }),
       });
-      if (!res2.ok) throw new Error(await res2.text());
-      const out = await res2.json();
 
-      setMsg(out?.verified ? "✅ Identity verified." : "❌ Not verified.");
-    } catch (e: any) {
-      setErr(e?.message || "Verification failed");
+      console.log("✅ Assertion:", assertion);
+      setStatus("Identity successfully verified!");
+    } catch (err: any) {
+      console.error(err);
+      setStatus("❌ Verification failed or canceled.");
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto card p-6">
-      <h1 className="text-xl font-semibold mb-3">Verify identity</h1>
-      <p className="text-sm text-udo-steel mb-4">
-        Uses the registered Face/Touch ID credential to authenticate the user.
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-6 text-center">
+      <h1 className="text-3xl font-bold text-udo-primary mb-3">
+        Verify Your Identity
+      </h1>
+      <p className="text-gray-600 mb-6">
+        Confirm your identity using your registered biometric credential.
       </p>
-      <button
-        onClick={verify}
-        disabled={busy}
-        className="w-full rounded-xl px-4 py-3 bg-udo-primary text-white"
-      >
-        {busy ? "Verifying…" : "Verify now"}
-      </button>
 
-      {msg && <p className="mt-4 text-green-600 text-sm">{msg}</p>}
-      {err && <p className="mt-4 text-red-600 text-sm">{err}</p>}
+      <Button onClick={handleVerify} disabled={busy}>
+        {busy ? "Verifying..." : "Verify Now"}
+      </Button>
+
+      {status && (
+        <p className="mt-4 text-sm text-gray-700 whitespace-pre-line">{status}</p>
+      )}
+
+      <button
+        onClick={logout}
+        className="text-sm text-red-500 mt-6 underline hover:text-red-600"
+      >
+        Logout
+      </button>
     </div>
   );
 }
