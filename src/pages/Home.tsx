@@ -1,5 +1,5 @@
 // =======================================================
-// 🏠 Home.tsx — Página principal del módulo Validate
+// 🏠 Home.tsx — Página principal del módulo Bioid
 // =======================================================
 import { useAuth } from "../context/AuthContext";
 import Loader from "../ui/Loader";
@@ -24,7 +24,7 @@ export default function Home() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center text-center p-6 bg-gray-50">
       <h1 className="text-4xl font-bold text-udo-primary mb-3">
-        Validate Module
+        Bioid Module
       </h1>
       <p className="text-gray-600 mb-6">
         Welcome <strong>{user.email}</strong>
