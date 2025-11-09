@@ -1,5 +1,5 @@
 {
-  "name": "wapp-clean",
+  "name": "bioid-frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -9,16 +9,20 @@
     "preview": "vite preview --port 5173"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "^10.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.2",
-    "framer-motion": "^11.0.0"
+    "react-router-dom": "^6.26.2"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
+    "@types/node": "^22.7.4",
+    "@types/react": "^18.3.7",
+    "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "vite": "^5.4.9",
+    "@vitejs/plugin-react": "^4.3.1"
   }
 }
